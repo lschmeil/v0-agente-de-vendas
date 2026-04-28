@@ -73,7 +73,7 @@ export default function PitchAgentPage() {
       }
     } catch (err) {
       setError('Ocorreu um erro ao gerar o pitch. Tente novamente.')
-      console.error('[v0] Error generating pitch:', err)
+      console.error('Error generating pitch:', err)
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +85,7 @@ export default function PitchAgentPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('[v0] Failed to copy:', err)
+      console.error('Failed to copy:', err)
     }
   }, [pitch])
 
@@ -106,7 +106,7 @@ export default function PitchAgentPage() {
         <header className="mb-12 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary">
             <SparklesIcon className="h-4 w-4" />
-            <span>Agente de IA para Vendas</span>
+            <span>Gerador de Pitch para Vendas</span>
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             PitchAgent
@@ -139,7 +139,7 @@ export default function PitchAgentPage() {
                     setBusinessName(e.target.value)
                     setError('')
                   }}
-                  placeholder="Nome do negócio"
+                  placeholder="Nome do negócio (ex: Barbearia do João)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
@@ -155,7 +155,7 @@ export default function PitchAgentPage() {
                     setCategory(e.target.value)
                     setError('')
                   }}
-                  placeholder="Categoria (ex: Restaurante, Barbearia, Academia)"
+                  placeholder="Categoria (ex: Barbearia, Restaurante, Academia)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
@@ -171,16 +171,18 @@ export default function PitchAgentPage() {
                     setCity(e.target.value)
                     setError('')
                   }}
-                  placeholder="Cidade"
+                  placeholder="Cidade (ex: São Paulo)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
               </div>
 
               {/* Has Website Toggle */}
-              <div
-                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-input p-4 transition-colors hover:bg-secondary"
-                onClick={() => !isLoading && setHasWebsite(!hasWebsite)}
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-border bg-input p-4 text-left transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setHasWebsite(!hasWebsite)}
+                disabled={isLoading}
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-lg ${
@@ -212,7 +214,7 @@ export default function PitchAgentPage() {
                     }`}
                   />
                 </div>
-              </div>
+              </button>
             </div>
 
             {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
@@ -220,6 +222,7 @@ export default function PitchAgentPage() {
 
           {/* Generate Button */}
           <Button
+            type="button"
             onClick={generatePitch}
             disabled={isLoading || !isFormValid}
             className="h-12 w-full gap-2 text-base font-semibold"
@@ -252,6 +255,7 @@ export default function PitchAgentPage() {
                 {pitch && !isLoading && (
                   <div className="flex gap-2">
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={resetForm}
@@ -261,6 +265,7 @@ export default function PitchAgentPage() {
                       Novo
                     </Button>
                     <Button
+                      type="button"
                       variant="secondary"
                       size="sm"
                       onClick={copyToClipboard}
@@ -305,8 +310,7 @@ export default function PitchAgentPage() {
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            Dica: Preencha os dados encontrados no Google Maps ou Instagram do
-            negócio
+            Dica: Use informações do Google Maps ou Instagram do negócio para preencher os campos
           </p>
         </footer>
       </div>
