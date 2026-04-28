@@ -21,20 +21,45 @@ export async function POST(request: Request) {
       return Response.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    // Fetch URL content using Jina Reader API (free, no auth required)
+    // Fetch URL content using Firecrawl API
     let pageContent = ''
     try {
-      const jinaUrl = `https://r.jina.ai/${encodeURIComponent(url)}`
-      const response = await fetch(jinaUrl, {
+      const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
         headers: {
-          'Accept': 'text/plain',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
         },
+        body: JSON.stringify({
+          url: url,
+          formats: ['markdown'],
+          onlyMainContent: true,
+        }),
       })
-      if (response.ok) {
-        pageContent = await response.text()
-        pageContent = pageContent.slice(0, 8000)
+      
+      if (firecrawlResponse.ok) {
+        const firecrawlData = await firecrawlResponse.json()
+        if (firecrawlData.success && firecrawlData.data) {
+          pageContent = firecrawlData.data.markdown || firecrawlData.data.content || ''
+          // Also grab metadata if available
+          if (firecrawlData.data.metadata) {
+            const meta = firecrawlData.data.metadata
+            pageContent = `Title: ${meta.title || 'N/A'}
+Description: ${meta.description || 'N/A'}
+URL: ${url}
+
+Content:
+${pageContent}`
+          }
+          pageContent = pageContent.slice(0, 10000)
+        }
+      } else {
+        const errorData = await firecrawlResponse.json().catch(() => ({}))
+        console.error('Firecrawl error:', errorData)
+        pageContent = `URL provided: ${url}`
       }
-    } catch {
+    } catch (error) {
+      console.error('Firecrawl fetch error:', error)
       pageContent = `URL provided: ${url}`
     }
 
