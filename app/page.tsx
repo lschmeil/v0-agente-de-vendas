@@ -15,21 +15,36 @@ import {
   TagIcon,
   MapPinIcon,
   GlobeIcon,
+  FlameIcon,
+  ZapIcon,
+  LightbulbIcon,
+  ShuffleIcon,
 } from 'lucide-react'
+
+type Tone = 'informal' | 'professional' | 'aggressive'
+type OpportunityLevel = 'high' | 'medium' | 'low'
+
+interface OpportunityScore {
+  level: OpportunityLevel
+  label: string
+}
 
 export default function PitchAgentPage() {
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState('')
   const [city, setCity] = useState('')
   const [hasWebsite, setHasWebsite] = useState(false)
+  const [tone, setTone] = useState<Tone>('informal')
   const [pitch, setPitch] = useState('')
+  const [opportunityScore, setOpportunityScore] = useState<OpportunityScore | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
+  const [variation, setVariation] = useState(0)
 
   const isFormValid = businessName.trim() && category.trim() && city.trim()
 
-  const generatePitch = useCallback(async () => {
+  const generatePitch = useCallback(async (useVariation = false) => {
     if (!isFormValid) {
       setError('Por favor, preencha todos os campos obrigatórios')
       return
@@ -38,6 +53,12 @@ export default function PitchAgentPage() {
     setError('')
     setIsLoading(true)
     setPitch('')
+    setOpportunityScore(null)
+
+    const newVariation = useVariation ? variation + 1 : 0
+    if (useVariation) {
+      setVariation(newVariation)
+    }
 
     try {
       const response = await fetch('/api/generate-pitch', {
@@ -48,6 +69,8 @@ export default function PitchAgentPage() {
           category: category.trim(),
           city: city.trim(),
           hasWebsite,
+          tone,
+          variation: newVariation,
         }),
       })
 
@@ -63,13 +86,31 @@ export default function PitchAgentPage() {
       }
 
       let fullPitch = ''
+      let buffer = ''
+      
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
-        const chunk = decoder.decode(value)
-        fullPitch += chunk
-        setPitch(fullPitch)
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const parsed = JSON.parse(line)
+              if (parsed.type === 'score') {
+                setOpportunityScore(parsed.data)
+              } else if (parsed.type === 'pitch') {
+                fullPitch += parsed.data
+                setPitch(fullPitch)
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
       }
     } catch (err) {
       setError('Ocorreu um erro ao gerar o pitch. Tente novamente.')
@@ -77,7 +118,7 @@ export default function PitchAgentPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [businessName, category, city, hasWebsite, isFormValid])
+  }, [businessName, category, city, hasWebsite, tone, isFormValid, variation])
 
   const copyToClipboard = useCallback(async () => {
     try {
@@ -94,10 +135,55 @@ export default function PitchAgentPage() {
     setCategory('')
     setCity('')
     setHasWebsite(false)
+    setTone('informal')
     setPitch('')
+    setOpportunityScore(null)
     setError('')
     setCopied(false)
+    setVariation(0)
   }, [])
+
+  const getOpportunityIcon = (level: OpportunityLevel) => {
+    switch (level) {
+      case 'high':
+        return <FlameIcon className="h-5 w-5" />
+      case 'medium':
+        return <ZapIcon className="h-5 w-5" />
+      case 'low':
+        return <LightbulbIcon className="h-5 w-5" />
+    }
+  }
+
+  const getOpportunityEmoji = (level: OpportunityLevel) => {
+    switch (level) {
+      case 'high':
+        return '🔥'
+      case 'medium':
+        return '⚡'
+      case 'low':
+        return '💡'
+    }
+  }
+
+  const getOpportunityColor = (level: OpportunityLevel) => {
+    switch (level) {
+      case 'high':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+      case 'medium':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+      case 'low':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+    }
+  }
+
+  const toneOptions: { value: Tone; label: string; emoji: string; description: string }[] = [
+    { value: 'informal', label: 'Informal', emoji: '😊', description: 'Amigável e descontraído' },
+    { value: 'professional', label: 'Profissional', emoji: '👔', description: 'Formal e corporativo' },
+    { value: 'aggressive', label: 'Agressivo', emoji: '🎯', description: 'Direto e urgente' },
+  ]
+
+  const charCount = pitch.length
+  const isIdealForWhatsApp = charCount > 0 && charCount <= 1000
 
   return (
     <div className="min-h-screen bg-background">
@@ -215,6 +301,30 @@ export default function PitchAgentPage() {
                   />
                 </div>
               </button>
+
+              {/* Tone Selector */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Tom do pitch</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {toneOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setTone(option.value)}
+                      disabled={isLoading}
+                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                        tone === option.value
+                          ? 'border-primary bg-primary/10 text-foreground'
+                          : 'border-border bg-input text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      }`}
+                    >
+                      <span className="text-xl">{option.emoji}</span>
+                      <span className="text-sm font-medium">{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
@@ -223,7 +333,7 @@ export default function PitchAgentPage() {
           {/* Generate Button */}
           <Button
             type="button"
-            onClick={generatePitch}
+            onClick={() => generatePitch(false)}
             disabled={isLoading || !isFormValid}
             className="h-12 w-full gap-2 text-base font-semibold"
             size="lg"
@@ -242,7 +352,7 @@ export default function PitchAgentPage() {
           </Button>
 
           {/* Step 2: Output */}
-          {(pitch || isLoading) && (
+          {(pitch || isLoading || opportunityScore) && (
             <div className="mt-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -287,6 +397,21 @@ export default function PitchAgentPage() {
                 )}
               </div>
 
+              {/* Opportunity Score Badge */}
+              {opportunityScore && (
+                <div className={`mb-4 flex items-center gap-2 rounded-lg border px-4 py-3 ${getOpportunityColor(opportunityScore.level)}`}>
+                  {getOpportunityIcon(opportunityScore.level)}
+                  <span className="font-semibold">
+                    {opportunityScore.label} {getOpportunityEmoji(opportunityScore.level)}
+                  </span>
+                  <span className="ml-auto text-sm opacity-80">
+                    {opportunityScore.level === 'high' && 'Negócio com alto potencial de conversão'}
+                    {opportunityScore.level === 'medium' && 'Boa oportunidade de venda'}
+                    {opportunityScore.level === 'low' && 'Pode precisar de mais convencimento'}
+                  </span>
+                </div>
+              )}
+
               <Textarea
                 value={pitch}
                 readOnly
@@ -298,8 +423,42 @@ export default function PitchAgentPage() {
                 className="min-h-[280px] resize-none border-border bg-secondary/50 leading-relaxed text-foreground"
               />
 
+              {/* Character Counter */}
               {pitch && !isLoading && (
-                <p className="mt-3 text-center text-sm text-muted-foreground">
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium ${isIdealForWhatsApp ? 'text-primary' : 'text-yellow-400'}`}>
+                      {charCount} caracteres
+                    </span>
+                    {isIdealForWhatsApp ? (
+                      <span className="text-muted-foreground">- Tamanho ideal para WhatsApp</span>
+                    ) : (
+                      <span className="text-yellow-400">- Considere reduzir para WhatsApp</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Regenerate Button */}
+              {pitch && !isLoading && (
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => generatePitch(true)}
+                    className="flex-1 gap-2"
+                  >
+                    <ShuffleIcon className="h-4 w-4" />
+                    Gerar nova variação
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground sm:hidden">
+                    Gera uma versão diferente mantendo os mesmos dados
+                  </p>
+                </div>
+              )}
+
+              {pitch && !isLoading && (
+                <p className="mt-4 text-center text-sm text-muted-foreground">
                   Clique em &quot;Copiar&quot; e cole diretamente no WhatsApp
                 </p>
               )}
