@@ -1,489 +1,362 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Spinner } from '@/components/ui/spinner'
 import { Input } from '@/components/ui/input'
-import {
-  SparklesIcon,
-  CopyIcon,
-  CheckIcon,
-  RefreshCwIcon,
-  BuildingIcon,
-  TagIcon,
-  MapPinIcon,
-  GlobeIcon,
-  FlameIcon,
-  ZapIcon,
-  LightbulbIcon,
-  ShuffleIcon,
-} from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { CheckIcon, CopyIcon, Loader2Icon, SparklesIcon, LinkIcon, ShuffleIcon, MapPinIcon, BuildingIcon, GlobeIcon } from 'lucide-react'
 
 type Tone = 'informal' | 'professional' | 'aggressive'
 type Language = 'pt-br' | 'en' | 'es'
 type OpportunityLevel = 'high' | 'medium' | 'low'
+
+interface BusinessInfo {
+  name: string
+  category: string
+  city: string | null
+  hasWebsite: boolean
+  description: string
+}
 
 interface OpportunityScore {
   level: OpportunityLevel
   label: string
 }
 
-export default function PitchAgentPage() {
-  const [businessName, setBusinessName] = useState('')
-  const [category, setCategory] = useState('')
-  const [city, setCity] = useState('')
-  const [hasWebsite, setHasWebsite] = useState(false)
+export default function PitchAgent() {
+  const [url, setUrl] = useState('')
   const [tone, setTone] = useState<Tone>('informal')
   const [language, setLanguage] = useState<Language>('pt-br')
   const [pitch, setPitch] = useState('')
-  const [opportunityScore, setOpportunityScore] = useState<OpportunityScore | null>(null)
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null)
+  const [opportunity, setOpportunity] = useState<OpportunityScore | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
-  const [variation, setVariation] = useState(0)
 
-  const isFormValid = businessName.trim() && category.trim() && city.trim()
+  const isValidUrl = (input: string) => {
+    const patterns = [
+      /google\.(com|com\.[a-z]{2})\/maps/i,
+      /maps\.google\.(com|com\.[a-z]{2})/i,
+      /goo\.gl\/maps/i,
+      /instagram\.com/i,
+      /instagr\.am/i,
+    ]
+    return patterns.some(pattern => pattern.test(input))
+  }
 
-  const generatePitch = useCallback(async (useVariation = false) => {
-    if (!isFormValid) {
-      setError('Please fill in all required fields')
+  const generatePitch = async (regenerate = false) => {
+    if (!url.trim()) {
+      setError('Please enter a Google Maps or Instagram URL')
+      return
+    }
+
+    if (!isValidUrl(url)) {
+      setError('Please enter a valid Google Maps or Instagram link')
       return
     }
 
     setError('')
     setIsLoading(true)
-    setPitch('')
-    setOpportunityScore(null)
-
-    const newVariation = useVariation ? variation + 1 : 0
-    if (useVariation) {
-      setVariation(newVariation)
+    if (!regenerate) {
+      setPitch('')
+      setBusinessInfo(null)
+      setOpportunity(null)
     }
 
     try {
       const response = await fetch('/api/generate-pitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: businessName.trim(),
-          category: category.trim(),
-          city: city.trim(),
-          hasWebsite,
-          tone,
-          language,
-          variation: newVariation,
-        }),
+        body: JSON.stringify({ url, tone, language }),
       })
 
       if (!response.ok) {
-        throw new Error('Error generating pitch')
+        throw new Error('Failed to generate pitch')
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-
-      if (!reader) {
-        throw new Error('Error processing response')
-      }
-
-      let fullPitch = ''
-      let buffer = ''
-      
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const parsed = JSON.parse(line)
-              if (parsed.type === 'score') {
-                setOpportunityScore(parsed.data)
-              } else if (parsed.type === 'pitch') {
-                fullPitch += parsed.data
-                setPitch(fullPitch)
-              }
-            } catch {
-              // Skip invalid JSON
-            }
-          }
-        }
-      }
-    } catch (err) {
-      setError('An error occurred while generating the pitch. Please try again.')
-      console.error('Error generating pitch:', err)
+      const data = await response.json()
+      setPitch(data.pitch)
+      setBusinessInfo(data.businessInfo)
+      setOpportunity(data.opportunity)
+    } catch {
+      setError('Failed to analyze URL and generate pitch. Please try again.')
     } finally {
       setIsLoading(false)
     }
-  }, [businessName, category, city, hasWebsite, tone, language, isFormValid, variation])
-
-  const copyToClipboard = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(pitch)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }, [pitch])
-
-  const resetForm = useCallback(() => {
-    setBusinessName('')
-    setCategory('')
-    setCity('')
-    setHasWebsite(false)
-    setTone('informal')
-    setLanguage('pt-br')
-    setPitch('')
-    setOpportunityScore(null)
-    setError('')
-    setCopied(false)
-    setVariation(0)
-  }, [])
-
-  const getOpportunityIcon = (level: OpportunityLevel) => {
-    switch (level) {
-      case 'high':
-        return <FlameIcon className="h-5 w-5" />
-      case 'medium':
-        return <ZapIcon className="h-5 w-5" />
-      case 'low':
-        return <LightbulbIcon className="h-5 w-5" />
-    }
   }
 
-  const getOpportunityEmoji = (level: OpportunityLevel) => {
-    switch (level) {
-      case 'high':
-        return ''
-      case 'medium':
-        return ''
-      case 'low':
-        return ''
-    }
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(pitch)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
-  const getOpportunityColor = (level: OpportunityLevel) => {
-    switch (level) {
-      case 'high':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-      case 'medium':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-      case 'low':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-    }
-  }
-
-  const getOpportunityDescription = (level: OpportunityLevel) => {
-    switch (level) {
-      case 'high':
-        return 'Business with high conversion potential'
-      case 'medium':
-        return 'Good sales opportunity'
-      case 'low':
-        return 'May need more convincing'
-    }
-  }
-
-  const toneOptions: { value: Tone; label: string; emoji: string; description: string }[] = [
-    { value: 'informal', label: 'Informal', emoji: '', description: 'Friendly and relaxed' },
-    { value: 'professional', label: 'Professional', emoji: '', description: 'Formal and corporate' },
-    { value: 'aggressive', label: 'Aggressive', emoji: '', description: 'Direct and urgent' },
+  const tones: { value: Tone; label: string; icon: string }[] = [
+    { value: 'informal', label: 'Informal', icon: '😊' },
+    { value: 'professional', label: 'Professional', icon: '👔' },
+    { value: 'aggressive', label: 'Aggressive', icon: '🎯' },
   ]
 
-  const languageOptions: { value: Language; flag: string; label: string }[] = [
-    { value: 'pt-br', flag: '', label: 'Portuguese' },
-    { value: 'en', flag: '', label: 'English' },
-    { value: 'es', flag: '', label: 'Spanish' },
+  const languages: { value: Language; label: string; flag: string }[] = [
+    { value: 'pt-br', label: 'Portuguese', flag: '🇧🇷' },
+    { value: 'en', label: 'English', flag: '🇺🇸' },
+    { value: 'es', label: 'Spanish', flag: '🇪🇸' },
   ]
+
+  const opportunityColors: Record<OpportunityLevel, string> = {
+    high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  }
+
+  const opportunityIcons: Record<OpportunityLevel, string> = {
+    high: '🔥',
+    medium: '⚡',
+    low: '💡',
+  }
 
   const charCount = pitch.length
-  const isIdealForWhatsApp = charCount > 0 && charCount <= 1000
+  const isIdealLength = charCount > 0 && charCount <= 1000
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-8 md:py-12">
+      <div className="mx-auto max-w-2xl">
         {/* Header */}
-        <header className="mb-12 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary">
-            <SparklesIcon className="h-4 w-4" />
-            <span>Sales Pitch Generator</span>
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-primary">
+            <SparklesIcon className="h-5 w-5" />
+            <span className="text-sm font-medium">AI-Powered Sales Pitch Generator</span>
           </div>
-          <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
             PitchAgent
           </h1>
-          <p className="mx-auto max-w-xl text-lg text-muted-foreground">
-            Enter local business information and get a personalized sales pitch
-            ready to send via WhatsApp
+          <p className="text-lg text-muted-foreground">
+            Paste a Google Maps or Instagram link and get a personalized sales pitch ready for WhatsApp
           </p>
-        </header>
+        </div>
 
-        {/* Main Card */}
-        <Card className="border-border/50 bg-card/50 p-6 backdrop-blur-sm sm:p-8">
-          {/* Step 1: Input Form */}
-          <div className="mb-6">
-            <label className="mb-4 flex items-center gap-2 text-sm font-medium text-foreground">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                1
-              </span>
-              Business Information
-            </label>
-
-            <div className="space-y-4">
-              {/* Business Name */}
-              <div className="relative">
-                <BuildingIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => {
-                    setBusinessName(e.target.value)
-                    setError('')
-                  }}
-                  placeholder="Business name (e.g., Joe's Barbershop)"
-                  className="h-12 pl-12"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Category */}
-              <div className="relative">
-                <TagIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value)
-                    setError('')
-                  }}
-                  placeholder="Category (e.g., Barbershop, Restaurant, Gym)"
-                  className="h-12 pl-12"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* City */}
-              <div className="relative">
-                <MapPinIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  value={city}
-                  onChange={(e) => {
-                    setCity(e.target.value)
-                    setError('')
-                  }}
-                  placeholder="City (e.g., New York)"
-                  className="h-12 pl-12"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Has Website Toggle */}
-              <button
-                type="button"
-                className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-border bg-input p-4 text-left transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={() => setHasWebsite(!hasWebsite)}
-                disabled={isLoading}
-              >
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    hasWebsite
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-muted-foreground'
-                  }`}
-                >
-                  <GlobeIcon className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">
-                    Does the business have a website?
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {hasWebsite
-                      ? 'Yes, they already have a website'
-                      : 'No, they don\'t have a website yet'}
-                  </p>
-                </div>
-                <div
-                  className={`h-6 w-11 rounded-full p-0.5 transition-colors ${
-                    hasWebsite ? 'bg-primary' : 'bg-border'
-                  }`}
-                >
-                  <div
-                    className={`h-5 w-5 rounded-full bg-white transition-transform ${
-                      hasWebsite ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </div>
-              </button>
-
-              {/* Pitch Language Selector */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Pitch Language</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {languageOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setLanguage(option.value)}
-                      disabled={isLoading}
-                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                        language === option.value
-                          ? 'border-primary bg-primary/10 text-foreground'
-                          : 'border-border bg-input text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      }`}
-                    >
-                      <span className="text-2xl">{option.flag}</span>
-                      <span className="text-sm font-medium">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone Selector */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Pitch Tone</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {toneOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setTone(option.value)}
-                      disabled={isLoading}
-                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                        tone === option.value
-                          ? 'border-primary bg-primary/10 text-foreground'
-                          : 'border-border bg-input text-muted-foreground hover:bg-secondary hover:text-foreground'
-                      }`}
-                    >
-                      <span className="text-xl">{option.emoji}</span>
-                      <span className="text-sm font-medium">{option.label}</span>
-                      <span className="text-xs text-muted-foreground">{option.description}</span>
-                    </button>
-                  ))}
-                </div>
+        {/* Input Card */}
+        <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <LinkIcon className="h-5 w-5 text-primary" />
+              Business URL
+            </CardTitle>
+            <CardDescription>
+              Enter a Google Maps or Instagram link to analyze the business
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* URL Input */}
+            <div className="space-y-2">
+              <Input
+                type="url"
+                placeholder="https://maps.google.com/... or https://instagram.com/..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="h-12 bg-input/50 text-base"
+              />
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MapPinIcon className="h-3 w-3" />
+                  Google Maps
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                  Instagram
+                </span>
               </div>
             </div>
 
-            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          </div>
+            {/* Language Selector */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <GlobeIcon className="h-4 w-4 text-primary" />
+                Pitch Language
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.value}
+                    type="button"
+                    onClick={() => setLanguage(lang.value)}
+                    className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-medium transition-all ${
+                      language === lang.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                    }`}
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className="hidden sm:inline">{lang.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* Generate Button */}
-          <Button
-            type="button"
-            onClick={() => generatePitch(false)}
-            disabled={isLoading || !isFormValid}
-            className="h-12 w-full gap-2 text-base font-semibold"
-            size="lg"
-          >
-            {isLoading ? (
-              <>
-                <Spinner className="h-5 w-5" />
-                Generating personalized pitch...
-              </>
-            ) : (
-              <>
-                <SparklesIcon className="h-5 w-5" />
-                Generate Sales Pitch
-              </>
+            {/* Tone Selector */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">Pitch Tone</label>
+              <div className="grid grid-cols-3 gap-2">
+                {tones.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setTone(t.value)}
+                    className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-medium transition-all ${
+                      tone === t.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                    }`}
+                  >
+                    <span>{t.icon}</span>
+                    <span className="hidden sm:inline">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </div>
             )}
-          </Button>
 
-          {/* Step 2: Output */}
-          {(pitch || isLoading || opportunityScore) && (
-            <div className="mt-8">
-              <div className="mb-3 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                    2
-                  </span>
-                  Pitch ready for WhatsApp
-                </label>
+            {/* Generate Button */}
+            <Button
+              type="button"
+              onClick={() => generatePitch()}
+              disabled={isLoading || !url.trim()}
+              className="h-12 w-full gap-2 text-base font-semibold"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2Icon className="h-5 w-5 animate-spin" />
+                  Analyzing URL...
+                </>
+              ) : (
+                <>
+                  <SparklesIcon className="h-5 w-5" />
+                  Generate Sales Pitch
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
 
-                {pitch && !isLoading && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={resetForm}
-                      className="gap-1.5 text-muted-foreground hover:text-foreground"
-                    >
-                      <RefreshCwIcon className="h-4 w-4" />
-                      New
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={copyToClipboard}
-                      className="gap-1.5"
-                    >
-                      {copied ? (
-                        <>
-                          <CheckIcon className="h-4 w-4 text-primary" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <CopyIcon className="h-4 w-4" />
-                          Copy
-                        </>
-                      )}
-                    </Button>
+        {/* Business Info Card */}
+        {businessInfo && !isLoading && (
+          <Card className="mb-6 border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BuildingIcon className="h-5 w-5 text-primary" />
+                Business Detected
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Name</span>
+                  <span className="font-medium text-foreground">{businessInfo.name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Category</span>
+                  <span className="font-medium capitalize text-foreground">{businessInfo.category}</span>
+                </div>
+                {businessInfo.city && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Location</span>
+                    <span className="font-medium text-foreground">{businessInfo.city}</span>
                   </div>
                 )}
-              </div>
-
-              {/* Opportunity Score Badge */}
-              {opportunityScore && (
-                <div className={`mb-4 flex items-center gap-2 rounded-lg border px-4 py-3 ${getOpportunityColor(opportunityScore.level)}`}>
-                  {getOpportunityIcon(opportunityScore.level)}
-                  <span className="font-semibold">
-                    {opportunityScore.label} {getOpportunityEmoji(opportunityScore.level)}
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Has Website</span>
+                  <span className={`font-medium ${businessInfo.hasWebsite ? 'text-yellow-400' : 'text-green-400'}`}>
+                    {businessInfo.hasWebsite ? 'Yes' : 'No'}
                   </span>
-                  <span className="ml-auto text-sm opacity-80">
-                    {getOpportunityDescription(opportunityScore.level)}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Output Card */}
+        {(pitch || isLoading) && (
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Generated Pitch</CardTitle>
+                {pitch && !isLoading && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copyToClipboard}
+                    className="gap-2"
+                  >
+                    {copied ? (
+                      <>
+                        <CheckIcon className="h-4 w-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <CopyIcon className="h-4 w-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Opportunity Score */}
+              {opportunity && !isLoading && (
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${opportunityColors[opportunity.level]}`}
+                  >
+                    <span>{opportunityIcons[opportunity.level]}</span>
+                    {opportunity.label}
                   </span>
                 </div>
               )}
 
-              <Textarea
-                value={pitch}
-                readOnly
-                placeholder={
-                  isLoading
-                    ? 'Generating a personalized pitch for this business...'
-                    : ''
-                }
-                className="min-h-[280px] resize-none border-border bg-secondary/50 leading-relaxed text-foreground"
-              />
+              {/* Pitch Output */}
+              {isLoading ? (
+                <div className="flex min-h-[200px] items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Analyzing business and generating pitch...</p>
+                  </div>
+                </div>
+              ) : (
+                <Textarea
+                  value={pitch}
+                  readOnly
+                  className="min-h-[200px] resize-none bg-input/30 text-base leading-relaxed"
+                />
+              )}
 
               {/* Character Counter */}
               {pitch && !isLoading && (
-                <div className="mt-3 flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${isIdealForWhatsApp ? 'text-primary' : 'text-yellow-400'}`}>
-                      {charCount} characters
-                    </span>
-                    {isIdealForWhatsApp ? (
-                      <span className="text-muted-foreground">- Ideal size for WhatsApp</span>
-                    ) : (
-                      <span className="text-yellow-400">- Consider shortening for WhatsApp</span>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {charCount} characters
+                  </span>
+                  <span className={isIdealLength ? 'text-green-400' : 'text-yellow-400'}>
+                    {isIdealLength ? 'Ideal for WhatsApp' : 'Consider shortening for WhatsApp'}
+                  </span>
                 </div>
               )}
 
               {/* Action Buttons */}
               {pitch && !isLoading && (
-                <div className="mt-4 flex flex-col gap-3">
+                <div className="flex flex-col gap-3 pt-2">
                   {/* WhatsApp Button */}
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(pitch)}`}
@@ -513,17 +386,15 @@ export default function PitchAgentPage() {
                   </Button>
                 </div>
               )}
-            </div>
-          )}
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
-          <p>
-            Tip: Use information from Google Maps or Instagram of the business to fill in the fields
-          </p>
+          <p>Powered by AI to help you close more deals</p>
         </footer>
       </div>
-    </div>
+    </main>
   )
 }
