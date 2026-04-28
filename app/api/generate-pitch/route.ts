@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Type': 'application/json; charset=utf-8',
       'Transfer-Encoding': 'chunked',
     },
   })
@@ -46,15 +46,15 @@ function calculateOpportunityScore(category: string, hasWebsite: boolean, langua
   
   // High-demand categories in all languages
   const highDemandCategories = [
-    'restaurante', 'restaurant', 'barbearia', 'barbershop', 'barber', 'peluqueria',
-    'salao', 'salon', 'salón', 'academia', 'gym', 'gimnasio', 'clinica', 'clinic', 'clínica',
-    'consultorio', 'consultório', 'pet', 'dentista', 'dentist', 'medico', 'médico', 'doctor',
-    'pizzaria', 'pizzeria', 'pizza', 'hamburgueria', 'burger', 'hamburgueseria', 'delivery'
+    'restaurante', 'restaurant', 'barbearia', 'barbershop', 'barber', 'peluquería',
+    'salão', 'salon', 'salón', 'academia', 'gym', 'gimnasio', 'clínica', 'clinic',
+    'consultório', 'consultorio', 'pet', 'dentista', 'dentist', 'médico', 'doctor',
+    'pizzaria', 'pizzeria', 'pizza', 'hamburgueria', 'burger', 'hamburguesería', 'delivery'
   ]
   const mediumDemandCategories = [
     'loja', 'store', 'tienda', 'shop', 'oficina', 'workshop', 'taller',
-    'escritorio', 'escritório', 'office', 'oficina', 'advocacia', 'law', 'abogado',
-    'contabilidade', 'accounting', 'contabilidad', 'imobiliaria', 'imobiliária', 'real estate', 'inmobiliaria',
+    'escritório', 'office', 'advocacia', 'law', 'abogado',
+    'contabilidade', 'accounting', 'contabilidad', 'imobiliária', 'real estate', 'inmobiliaria',
     'escola', 'school', 'escuela', 'curso', 'course'
   ]
   
@@ -62,7 +62,7 @@ function calculateOpportunityScore(category: string, hasWebsite: boolean, langua
   const isMediumDemand = mediumDemandCategories.some(cat => categoryLower.includes(cat))
   
   const labels = {
-    'pt-br': { high: 'Alta Oportunidade', medium: 'Media Oportunidade', low: 'Baixa Oportunidade' },
+    'pt-br': { high: 'Alta Oportunidade', medium: 'Média Oportunidade', low: 'Baixa Oportunidade' },
     'en': { high: 'High Opportunity', medium: 'Medium Opportunity', low: 'Low Opportunity' },
     'es': { high: 'Alta Oportunidad', medium: 'Oportunidad Media', low: 'Baja Oportunidad' },
   }
@@ -111,19 +111,19 @@ function generatePortuguesePitch(
   const categoryLower = category.toLowerCase()
 
   const categoryBenefits: Record<string, string> = {
-    restaurante: `cardapio online com fotos de dar agua na boca, pedidos pelo WhatsApp integrado e reservas automaticas`,
-    barbearia: `agendamento online 24h, galeria dos seus melhores cortes e avaliacoes dos clientes`,
-    academia: `planos e horarios sempre atualizados, area do aluno para acompanhar treinos e matriculas online`,
-    salao: `agendamento facil pelo celular, portfolio dos trabalhos e promocoes em destaque`,
-    clinica: `agendamento online, informacoes sobre procedimentos e depoimentos de pacientes satisfeitos`,
-    loja: `catalogo completo dos produtos, compras online e integracao com WhatsApp para duvidas rapidas`,
-    oficina: `orcamentos online, galeria de servicos realizados e agendamento pratico`,
+    restaurante: `cardápio online com fotos de dar água na boca, pedidos pelo WhatsApp integrado e reservas automáticas`,
+    barbearia: `agendamento online 24h, galeria dos seus melhores cortes e avaliações dos clientes`,
+    academia: `planos e horários sempre atualizados, área do aluno para acompanhar treinos e matrículas online`,
+    salao: `agendamento fácil pelo celular, portfólio dos trabalhos e promoções em destaque`,
+    clinica: `agendamento online, informações sobre procedimentos e depoimentos de pacientes satisfeitos`,
+    loja: `catálogo completo dos produtos, compras online e integração com WhatsApp para dúvidas rápidas`,
+    oficina: `orçamentos online, galeria de serviços realizados e agendamento prático`,
     pet: `agendamento de banho e tosa online, galeria dos pets atendidos e dicas de cuidados`,
-    consultorio: `agendamento 24h, informacoes sobre especialidades e localizacao facil de encontrar`,
-    escritorio: `apresentacao profissional dos servicos, cases de sucesso e formulario de contato direto`,
+    consultorio: `agendamento 24h, informações sobre especialidades e localização fácil de encontrar`,
+    escritorio: `apresentação profissional dos serviços, cases de sucesso e formulário de contato direto`,
   }
 
-  let benefits = `vitrine profissional dos seus servicos, contato direto pelo WhatsApp e presenca forte no Google`
+  let benefits = `vitrine profissional dos seus serviços, contato direto pelo WhatsApp e presença forte no Google`
   for (const [key, value] of Object.entries(categoryBenefits)) {
     if (categoryLower.includes(key)) {
       benefits = value
@@ -133,21 +133,21 @@ function generatePortuguesePitch(
 
   const toneSettings = {
     informal: {
-      greeting: ['Oi! Tudo bem?', 'E ai, tudo certo?', 'Ola! Tudo joia?'][variation % 3],
+      greeting: ['Oi! Tudo bem?', 'E aí, tudo certo?', 'Olá! Tudo joia?'][variation % 3],
       closing: ['Posso te ligar ainda essa semana?', 'Bora bater um papo?', 'Que tal conversarmos?'][variation % 3],
-      connector: 'Entao',
-      urgency: 'Sabe o que e legal?',
+      connector: 'Então',
+      urgency: 'Sabe o que é legal?',
     },
     professional: {
-      greeting: ['Prezado(a), boa tarde.', 'Ola, espero que esteja bem.', 'Cumprimentos cordiais.'][variation % 3],
-      closing: ['Fico a disposicao para uma reuniao.', 'Aguardo seu retorno para agendarmos uma conversa.', 'Terei prazer em apresentar nossa proposta em detalhes.'][variation % 3],
+      greeting: ['Prezado(a), boa tarde.', 'Olá, espero que esteja bem.', 'Cumprimentos cordiais.'][variation % 3],
+      closing: ['Fico à disposição para uma reunião.', 'Aguardo seu retorno para agendarmos uma conversa.', 'Terei prazer em apresentar nossa proposta em detalhes.'][variation % 3],
       connector: 'Diante disso',
-      urgency: 'E importante ressaltar que',
+      urgency: 'É importante ressaltar que',
     },
     aggressive: {
-      greeting: ['Direto ao ponto:', 'Vou ser sincero com voce:', 'Sem rodeios:'][variation % 3],
-      closing: ['Me responde HOJE e te faco uma condicao especial.', 'Essa oportunidade nao vai durar. Me chama agora!', 'Nao deixa pra depois. Vamos fechar?'][variation % 3],
-      connector: 'A verdade e que',
+      greeting: ['Direto ao ponto:', 'Vou ser sincero com você:', 'Sem rodeios:'][variation % 3],
+      closing: ['Me responde HOJE e te faço uma condição especial.', 'Essa oportunidade não vai durar. Me chama agora!', 'Não deixa pra depois. Vamos fechar?'][variation % 3],
+      connector: 'A verdade é que',
       urgency: 'FATO:',
     },
   }
@@ -156,8 +156,8 @@ function generatePortuguesePitch(
 
   if (hasWebsite) {
     const modernizationReasons = [
-      `um site mais rapido e moderno que funciona perfeitamente no celular`,
-      `um design atualizado que passa mais confianca para novos clientes`,
+      `um site mais rápido e moderno que funciona perfeitamente no celular`,
+      `um design atualizado que passa mais confiança para novos clientes`,
       `melhor posicionamento no Google para "${category} em ${city}"`,
     ]
     const reason = modernizationReasons[(variation + 1) % modernizationReasons.length]
@@ -165,90 +165,90 @@ function generatePortuguesePitch(
     if (tone === 'informal') {
       return `${settings.greeting}
 
-Vi que a ${businessName} ja tem um site, e isso e otimo! Mas deixa eu te fazer uma pergunta: quando foi a ultima vez que ele foi atualizado?
+Vi que a ${businessName} já tem um site, e isso é ótimo! Mas deixa eu te fazer uma pergunta: quando foi a última vez que ele foi atualizado?
 
-Trabalho com criacao de sites profissionais aqui em ${city} e percebi que muitos negocios de ${category.toLowerCase()} estao perdendo clientes por ter um site desatualizado ou lento no celular.
+Trabalho com criação de sites profissionais aqui em ${city} e percebi que muitos negócios de ${category.toLowerCase()} estão perdendo clientes por ter um site desatualizado ou lento no celular.
 
-${settings.urgency} Mais de 80% das pessoas pesquisam no Google antes de escolher onde ir. E sabe o que elas olham primeiro? A aparencia do site e se ele carrega rapido.
+${settings.urgency} Mais de 80% das pessoas pesquisam no Google antes de escolher onde ir. E sabe o que elas olham primeiro? A aparência do site e se ele carrega rápido.
 
 Posso criar para a ${businessName} ${reason}.
 
-Alem disso, incluo: ${benefits}.
+Além disso, incluo: ${benefits}.
 
-Que tal batermos um papo rapido de 10 minutos para eu te mostrar algumas ideias? Sem compromisso!
+Que tal batermos um papo rápido de 10 minutos para eu te mostrar algumas ideias? Sem compromisso!
 
 ${settings.closing}`
     } else if (tone === 'professional') {
       return `${settings.greeting}
 
-Identificamos que a ${businessName} ja possui presenca digital, o que demonstra visao de mercado. No entanto, gostaria de apresentar uma oportunidade de modernizacao.
+Identificamos que a ${businessName} já possui presença digital, o que demonstra visão de mercado. No entanto, gostaria de apresentar uma oportunidade de modernização.
 
 Atuo no segmento de desenvolvimento web em ${city}, com foco em ${category.toLowerCase()}. ${settings.urgency} estudos indicam que 80% dos consumidores pesquisam online antes de visitar estabelecimentos locais.
 
-Nossa proposta inclui: ${reason}, alem de ${benefits}.
+Nossa proposta inclui: ${reason}, além de ${benefits}.
 
-${settings.connector}, acredito que podemos agregar valor significativo a presenca digital da ${businessName}.
+${settings.connector}, acredito que podemos agregar valor significativo à presença digital da ${businessName}.
 
 ${settings.closing}`
     } else {
       return `${settings.greeting}
 
-A ${businessName} tem site, mas vou te contar uma coisa que talvez voce nao saiba: site desatualizado AFASTA cliente. E pior do que nao ter site.
+A ${businessName} tem site, mas vou te contar uma coisa que talvez você não saiba: site desatualizado AFASTA cliente. É pior do que não ter site.
 
-${settings.urgency} Seus concorrentes em ${city} estao investindo pesado em presenca digital. Enquanto isso, um site lento ou feio esta custando clientes todo dia.
+${settings.urgency} Seus concorrentes em ${city} estão investindo pesado em presença digital. Enquanto isso, um site lento ou feio está custando clientes todo dia.
 
-Posso resolver isso RAPIDO: ${reason}, com ${benefits}.
+Posso resolver isso RÁPIDO: ${reason}, com ${benefits}.
 
 ${settings.closing}`
     }
   } else {
     const urgencyPoints = [
-      `Seus concorrentes em ${city} ja estao aparecendo no Google quando alguem pesquisa por "${category}". Nao seria hora de aparecer tambem?`,
-      `97% das pessoas pesquisam online antes de visitar um negocio local. Quem nao esta no Google, praticamente nao existe.`,
-      `Imagina quantos clientes passam pela porta da ${businessName} sem entrar porque nao encontraram voces no Google?`,
+      `Seus concorrentes em ${city} já estão aparecendo no Google quando alguém pesquisa por "${category}". Não seria hora de aparecer também?`,
+      `97% das pessoas pesquisam online antes de visitar um negócio local. Quem não está no Google, praticamente não existe.`,
+      `Imagina quantos clientes passam pela porta da ${businessName} sem entrar porque não encontraram vocês no Google?`,
     ]
     const urgency = urgencyPoints[(variation + 2) % urgencyPoints.length]
 
     if (tone === 'informal') {
       return `${settings.greeting}
 
-Sou especialista em criacao de sites para negocios locais aqui em ${city} e encontrei a ${businessName} enquanto pesquisava por ${category.toLowerCase()} na regiao.
+Sou especialista em criação de sites para negócios locais aqui em ${city} e encontrei a ${businessName} enquanto pesquisava por ${category.toLowerCase()} na região.
 
 ${urgency}
 
 Um site profissional para a ${businessName} pode ter: ${benefits}.
 
-E o melhor: nao precisa ser caro nem complicado. Cuido de tudo para voce, desde a criacao ate deixar o site funcionando perfeitamente.
+E o melhor: não precisa ser caro nem complicado. Cuido de tudo para você, desde a criação até deixar o site funcionando perfeitamente.
 
-Em poucas semanas, quando alguem pesquisar por "${category.toLowerCase()} em ${city}", a ${businessName} vai aparecer com um site bonito e profissional.
+Em poucas semanas, quando alguém pesquisar por "${category.toLowerCase()} em ${city}", a ${businessName} vai aparecer com um site bonito e profissional.
 
-Posso te mostrar alguns exemplos de sites que fiz para outros negocios parecidos? E rapidinho, uns 10 minutinhos de conversa!
+Posso te mostrar alguns exemplos de sites que fiz para outros negócios parecidos? É rapidinho, uns 10 minutinhos de conversa!
 
 ${settings.closing}`
     } else if (tone === 'professional') {
       return `${settings.greeting}
 
-Sou desenvolvedor web especializado em negocios locais na regiao de ${city}. Ao realizar um estudo de mercado sobre ${category.toLowerCase()}, identifiquei a ${businessName}.
+Sou desenvolvedor web especializado em negócios locais na região de ${city}. Ao realizar um estudo de mercado sobre ${category.toLowerCase()}, identifiquei a ${businessName}.
 
-${settings.urgency} a ausencia de presenca digital pode representar uma perda significativa de oportunidades comerciais. Pesquisas indicam que a maioria dos consumidores realiza buscas online antes de visitar estabelecimentos.
+${settings.urgency} a ausência de presença digital pode representar uma perda significativa de oportunidades comerciais. Pesquisas indicam que a maioria dos consumidores realiza buscas online antes de visitar estabelecimentos.
 
-Nossa solucao contempla: ${benefits}.
+Nossa solução contempla: ${benefits}.
 
-${settings.connector}, gostaria de apresentar um projeto personalizado para estabelecer a presenca digital da ${businessName} de forma profissional e eficiente.
+${settings.connector}, gostaria de apresentar um projeto personalizado para estabelecer a presença digital da ${businessName} de forma profissional e eficiente.
 
 ${settings.closing}`
     } else {
       return `${settings.greeting}
 
-A ${businessName} NAO TEM SITE. Em 2024. Isso e um problema serio.
+A ${businessName} NÃO TEM SITE. Em 2024. Isso é um problema sério.
 
-${settings.urgency} Enquanto voce le essa mensagem, alguem esta pesquisando "${category.toLowerCase()} em ${city}" no Google. E sabe quem aparece? Seus concorrentes. A ${businessName}? Invisivel.
+${settings.urgency} Enquanto você lê essa mensagem, alguém está pesquisando "${category.toLowerCase()} em ${city}" no Google. E sabe quem aparece? Seus concorrentes. A ${businessName}? Invisível.
 
-Cada dia sem site e dinheiro perdido. Simples assim.
+Cada dia sem site é dinheiro perdido. Simples assim.
 
 Eu crio sites profissionais com: ${benefits}.
 
-Sem enrolacao. Entrego rapido. E o investimento se paga em poucos meses com os novos clientes.
+Sem enrolação. Entrego rápido. E o investimento se paga em poucos meses com os novos clientes.
 
 ${settings.closing}`
     }
@@ -290,19 +290,19 @@ function generateEnglishPitch(
   const toneSettings = {
     informal: {
       greeting: ['Hey there!', 'Hi! How are you?', 'Hello!'][variation % 3],
-      closing: ['Can I give you a call this week?', 'Let\'s chat!', 'What do you say we talk?'][variation % 3],
+      closing: ['Can I give you a call this week?', "Let's chat!", 'What do you say we talk?'][variation % 3],
       connector: 'So',
-      urgency: 'Here\'s the thing:',
+      urgency: "Here's the thing:",
     },
     professional: {
       greeting: ['Good afternoon.', 'Hello, I hope this message finds you well.', 'Greetings.'][variation % 3],
-      closing: ['I\'m available for a meeting at your convenience.', 'I look forward to scheduling a conversation.', 'I would be pleased to present our proposal in detail.'][variation % 3],
+      closing: ["I'm available for a meeting at your convenience.", 'I look forward to scheduling a conversation.', 'I would be pleased to present our proposal in detail.'][variation % 3],
       connector: 'With that in mind',
-      urgency: 'It\'s important to note that',
+      urgency: "It's important to note that",
     },
     aggressive: {
-      greeting: ['Let me be direct:', 'I\'ll be straight with you:', 'No beating around the bush:'][variation % 3],
-      closing: ['Reply TODAY and I\'ll give you a special deal.', 'This opportunity won\'t last. Message me now!', 'Don\'t put it off. Let\'s close this deal!'][variation % 3],
+      greeting: ['Let me be direct:', "I'll be straight with you:", 'No beating around the bush:'][variation % 3],
+      closing: ["Reply TODAY and I'll give you a special deal.", "This opportunity won't last. Message me now!", "Don't put it off. Let's close this deal!"][variation % 3],
       connector: 'The truth is',
       urgency: 'FACT:',
     },
@@ -422,17 +422,17 @@ function generateSpanishPitch(
   const categoryLower = category.toLowerCase()
 
   const categoryBenefits: Record<string, string> = {
-    restaurante: `menu online con fotos que dan hambre, pedidos por WhatsApp integrado y reservas automaticas`,
-    peluqueria: `reservas online 24h, galeria de tus mejores cortes y opiniones de clientes`,
-    barberia: `reservas online 24h, galeria de tus mejores cortes y opiniones de clientes`,
-    gimnasio: `planes y horarios siempre actualizados, area del cliente para seguir entrenamientos e inscripciones online`,
-    salon: `reservas faciles desde el celular, portafolio de trabajos y promociones destacadas`,
-    clinica: `citas online, informacion sobre procedimientos y testimonios de pacientes satisfechos`,
-    tienda: `catalogo completo de productos, compras online e integracion con WhatsApp para dudas rapidas`,
-    taller: `presupuestos online, galeria de servicios realizados y reservas practicas`,
-    pet: `citas de bano y corte online, galeria de mascotas atendidas y consejos de cuidado`,
-    consultorio: `citas 24h, informacion sobre especialidades y ubicacion facil de encontrar`,
-    oficina: `presentacion profesional de servicios, casos de exito y formulario de contacto directo`,
+    restaurante: `menú online con fotos que dan hambre, pedidos por WhatsApp integrado y reservas automáticas`,
+    peluquería: `reservas online 24h, galería de tus mejores cortes y opiniones de clientes`,
+    barbería: `reservas online 24h, galería de tus mejores cortes y opiniones de clientes`,
+    gimnasio: `planes y horarios siempre actualizados, área del cliente para seguir entrenamientos e inscripciones online`,
+    salón: `reservas fáciles desde el celular, portafolio de trabajos y promociones destacadas`,
+    clínica: `citas online, información sobre procedimientos y testimonios de pacientes satisfechos`,
+    tienda: `catálogo completo de productos, compras online e integración con WhatsApp para dudas rápidas`,
+    taller: `presupuestos online, galería de servicios realizados y reservas prácticas`,
+    pet: `citas de baño y corte online, galería de mascotas atendidas y consejos de cuidado`,
+    consultorio: `citas 24h, información sobre especialidades y ubicación fácil de encontrar`,
+    oficina: `presentación profesional de servicios, casos de éxito y formulario de contacto directo`,
   }
 
   let benefits = `vitrina profesional de tus servicios, contacto directo por WhatsApp y presencia fuerte en Google`
@@ -445,20 +445,20 @@ function generateSpanishPitch(
 
   const toneSettings = {
     informal: {
-      greeting: ['Hola! Que tal?', 'Hey! Como estas?', 'Hola! Como va todo?'][variation % 3],
-      closing: ['Te puedo llamar esta semana?', 'Charlamos un rato?', 'Que te parece si hablamos?'][variation % 3],
+      greeting: ['¡Hola! ¿Qué tal?', '¡Hey! ¿Cómo estás?', '¡Hola! ¿Cómo va todo?'][variation % 3],
+      closing: ['¿Te puedo llamar esta semana?', '¿Charlamos un rato?', '¿Qué te parece si hablamos?'][variation % 3],
       connector: 'Entonces',
       urgency: 'Mira esto:',
     },
     professional: {
       greeting: ['Estimado/a, buenas tardes.', 'Hola, espero que se encuentre bien.', 'Cordiales saludos.'][variation % 3],
-      closing: ['Quedo a disposicion para una reunion.', 'Espero su respuesta para agendar una conversacion.', 'Sera un placer presentar nuestra propuesta en detalle.'][variation % 3],
+      closing: ['Quedo a disposición para una reunión.', 'Espero su respuesta para agendar una conversación.', 'Será un placer presentar nuestra propuesta en detalle.'][variation % 3],
       connector: 'Por lo tanto',
       urgency: 'Es importante destacar que',
     },
     aggressive: {
       greeting: ['Voy al grano:', 'Te soy sincero:', 'Sin rodeos:'][variation % 3],
-      closing: ['Respondeme HOY y te hago una condicion especial.', 'Esta oportunidad no va a durar. Escribime ahora!', 'No lo dejes para despues. Cerramos?'][variation % 3],
+      closing: ['¡Respóndeme HOY y te hago una condición especial!', '¡Esta oportunidad no va a durar. Escríbeme ahora!', '¿No lo dejes para después. Cerramos?'][variation % 3],
       connector: 'La verdad es que',
       urgency: 'HECHO:',
     },
@@ -468,8 +468,8 @@ function generateSpanishPitch(
 
   if (hasWebsite) {
     const modernizationReasons = [
-      `un sitio mas rapido y moderno que funciona perfecto en el celular`,
-      `un diseno actualizado que transmite mas confianza a nuevos clientes`,
+      `un sitio más rápido y moderno que funciona perfecto en el celular`,
+      `un diseño actualizado que transmite más confianza a nuevos clientes`,
       `mejor posicionamiento en Google para "${category} en ${city}"`,
     ]
     const reason = modernizationReasons[(variation + 1) % modernizationReasons.length]
@@ -477,27 +477,27 @@ function generateSpanishPitch(
     if (tone === 'informal') {
       return `${settings.greeting}
 
-Vi que ${businessName} ya tiene un sitio web, y eso esta genial! Pero dejame hacerte una pregunta: cuando fue la ultima vez que lo actualizaron?
+Vi que ${businessName} ya tiene un sitio web, ¡y eso está genial! Pero déjame hacerte una pregunta: ¿cuándo fue la última vez que lo actualizaron?
 
-Trabajo creando sitios web profesionales aqui en ${city} y he notado que muchos negocios de ${category.toLowerCase()} estan perdiendo clientes por tener un sitio desactualizado o lento en el celular.
+Trabajo creando sitios web profesionales aquí en ${city} y he notado que muchos negocios de ${category.toLowerCase()} están perdiendo clientes por tener un sitio desactualizado o lento en el celular.
 
-${settings.urgency} Mas del 80% de las personas buscan en Google antes de decidir donde ir. Y sabes que miran primero? Como se ve el sitio y si carga rapido.
+${settings.urgency} Más del 80% de las personas buscan en Google antes de decidir dónde ir. ¿Y sabes qué miran primero? Cómo se ve el sitio y si carga rápido.
 
 Puedo crear para ${businessName} ${reason}.
 
-Ademas, incluyo: ${benefits}.
+Además, incluyo: ${benefits}.
 
-Que te parece si charlamos unos 10 minutos para mostrarte algunas ideas? Sin compromiso!
+¿Qué te parece si charlamos unos 10 minutos para mostrarte algunas ideas? ¡Sin compromiso!
 
 ${settings.closing}`
     } else if (tone === 'professional') {
       return `${settings.greeting}
 
-He identificado que ${businessName} ya cuenta con presencia digital, lo cual demuestra vision de mercado. Sin embargo, me gustaria presentar una oportunidad de modernizacion.
+He identificado que ${businessName} ya cuenta con presencia digital, lo cual demuestra visión de mercado. Sin embargo, me gustaría presentar una oportunidad de modernización.
 
 Trabajo en desarrollo web en ${city}, con enfoque en ${category.toLowerCase()}. ${settings.urgency} estudios indican que el 80% de los consumidores investigan online antes de visitar establecimientos locales.
 
-Nuestra propuesta incluye: ${reason}, ademas de ${benefits}.
+Nuestra propuesta incluye: ${reason}, además de ${benefits}.
 
 ${settings.connector}, creo que podemos agregar valor significativo a la presencia digital de ${businessName}.
 
@@ -505,48 +505,48 @@ ${settings.closing}`
     } else {
       return `${settings.greeting}
 
-${businessName} tiene sitio web, pero te voy a contar algo que quizas no sabias: un sitio desactualizado ALEJA clientes. Es peor que no tener sitio.
+${businessName} tiene sitio web, pero te voy a contar algo que quizás no sabías: un sitio desactualizado ALEJA clientes. Es peor que no tener sitio.
 
-${settings.urgency} Tus competidores en ${city} estan invirtiendo fuerte en presencia digital. Mientras tanto, un sitio lento o feo te esta costando clientes todos los dias.
+${settings.urgency} Tus competidores en ${city} están invirtiendo fuerte en presencia digital. Mientras tanto, un sitio lento o feo te está costando clientes todos los días.
 
-Puedo resolver esto RAPIDO: ${reason}, con ${benefits}.
+Puedo resolver esto RÁPIDO: ${reason}, con ${benefits}.
 
 ${settings.closing}`
     }
   } else {
     const urgencyPoints = [
-      `Tus competidores en ${city} ya aparecen en Google cuando alguien busca "${category}". No seria hora de aparecer vos tambien?`,
-      `El 97% de las personas buscan online antes de visitar un negocio local. Si no estas en Google, practicamente no existis.`,
-      `Imaginate cuantos clientes pasan por la puerta de ${businessName} sin entrar porque no los encontraron en Google?`,
+      `Tus competidores en ${city} ya aparecen en Google cuando alguien busca "${category}". ¿No sería hora de aparecer tú también?`,
+      `El 97% de las personas buscan online antes de visitar un negocio local. Si no estás en Google, prácticamente no existes.`,
+      `¿Imagínate cuántos clientes pasan por la puerta de ${businessName} sin entrar porque no los encontraron en Google?`,
     ]
     const urgency = urgencyPoints[(variation + 2) % urgencyPoints.length]
 
     if (tone === 'informal') {
       return `${settings.greeting}
 
-Soy especialista en crear sitios web para negocios locales aqui en ${city} y encontre ${businessName} mientras investigaba ${category.toLowerCase()} en la zona.
+Soy especialista en crear sitios web para negocios locales aquí en ${city} y encontré ${businessName} mientras investigaba ${category.toLowerCase()} en la zona.
 
 ${urgency}
 
 Un sitio profesional para ${businessName} puede tener: ${benefits}.
 
-Y lo mejor: no tiene que ser caro ni complicado. Me encargo de todo, desde la creacion hasta dejarlo funcionando perfecto.
+Y lo mejor: no tiene que ser caro ni complicado. Me encargo de todo, desde la creación hasta dejarlo funcionando perfecto.
 
 En pocas semanas, cuando alguien busque "${category.toLowerCase()} en ${city}", ${businessName} va a aparecer con un sitio lindo y profesional.
 
-Te puedo mostrar algunos ejemplos de sitios que hice para otros negocios parecidos? Son solo 10 minutitos de charla!
+¿Te puedo mostrar algunos ejemplos de sitios que hice para otros negocios parecidos? ¡Son solo 10 minutitos de charla!
 
 ${settings.closing}`
     } else if (tone === 'professional') {
       return `${settings.greeting}
 
-Soy desarrollador web especializado en negocios locales en la zona de ${city}. Al realizar un estudio de mercado sobre ${category.toLowerCase()}, identifique a ${businessName}.
+Soy desarrollador web especializado en negocios locales en la zona de ${city}. Al realizar un estudio de mercado sobre ${category.toLowerCase()}, identifiqué a ${businessName}.
 
-${settings.urgency} la ausencia de presencia digital puede representar una perdida significativa de oportunidades comerciales. Las investigaciones indican que la mayoria de los consumidores realizan busquedas online antes de visitar establecimientos.
+${settings.urgency} la ausencia de presencia digital puede representar una pérdida significativa de oportunidades comerciales. Las investigaciones indican que la mayoría de los consumidores realizan búsquedas online antes de visitar establecimientos.
 
-Nuestra solucion contempla: ${benefits}.
+Nuestra solución contempla: ${benefits}.
 
-${settings.connector}, me gustaria presentar un proyecto personalizado para establecer la presencia digital de ${businessName} de forma profesional y eficiente.
+${settings.connector}, me gustaría presentar un proyecto personalizado para establecer la presencia digital de ${businessName} de forma profesional y eficiente.
 
 ${settings.closing}`
     } else {
@@ -554,13 +554,13 @@ ${settings.closing}`
 
 ${businessName} NO TIENE SITIO WEB. En 2024. Esto es un problema serio.
 
-${settings.urgency} Mientras lees este mensaje, alguien esta buscando "${category.toLowerCase()} en ${city}" en Google. Y sabes quien aparece? Tus competidores. ${businessName}? Invisible.
+${settings.urgency} Mientras lees este mensaje, alguien está buscando "${category.toLowerCase()} en ${city}" en Google. ¿Y sabes quién aparece? Tus competidores. ¿${businessName}? Invisible.
 
-Cada dia sin sitio web es plata perdida. Asi de simple.
+Cada día sin sitio web es plata perdida. Así de simple.
 
 Yo creo sitios profesionales con: ${benefits}.
 
-Sin vueltas. Entrego rapido. Y la inversion se paga sola en pocos meses con los nuevos clientes.
+Sin vueltas. Entrego rápido. Y la inversión se paga sola en pocos meses con los nuevos clientes.
 
 ${settings.closing}`
     }
