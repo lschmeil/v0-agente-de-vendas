@@ -5,36 +5,33 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Spinner } from '@/components/ui/spinner'
-import { LinkIcon, SparklesIcon, CopyIcon, CheckIcon, RefreshCwIcon, MapPinIcon, InstagramIcon } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  SparklesIcon,
+  CopyIcon,
+  CheckIcon,
+  RefreshCwIcon,
+  BuildingIcon,
+  TagIcon,
+  MapPinIcon,
+  GlobeIcon,
+} from 'lucide-react'
 
 export default function PitchAgentPage() {
-  const [url, setUrl] = useState('')
+  const [businessName, setBusinessName] = useState('')
+  const [category, setCategory] = useState('')
+  const [city, setCity] = useState('')
+  const [hasWebsite, setHasWebsite] = useState(false)
   const [pitch, setPitch] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
 
-  const isValidUrl = (input: string) => {
-    try {
-      const urlObj = new URL(input)
-      return urlObj.hostname.includes('google.com/maps') || 
-             urlObj.hostname.includes('maps.google') ||
-             urlObj.hostname.includes('goo.gl') ||
-             urlObj.hostname.includes('instagram.com') ||
-             urlObj.hostname.includes('instagr.am')
-    } catch {
-      return false
-    }
-  }
+  const isFormValid = businessName.trim() && category.trim() && city.trim()
 
   const generatePitch = useCallback(async () => {
-    if (!url.trim()) {
-      setError('Por favor, cole um link do Google Maps ou Instagram')
-      return
-    }
-
-    if (!isValidUrl(url)) {
-      setError('Por favor, cole um link válido do Google Maps ou Instagram')
+    if (!isFormValid) {
+      setError('Por favor, preencha todos os campos obrigatórios')
       return
     }
 
@@ -46,7 +43,12 @@ export default function PitchAgentPage() {
       const response = await fetch('/api/generate-pitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({
+          businessName: businessName.trim(),
+          category: category.trim(),
+          city: city.trim(),
+          hasWebsite,
+        }),
       })
 
       if (!response.ok) {
@@ -64,7 +66,7 @@ export default function PitchAgentPage() {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        
+
         const chunk = decoder.decode(value)
         fullPitch += chunk
         setPitch(fullPitch)
@@ -75,7 +77,7 @@ export default function PitchAgentPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [url])
+  }, [businessName, category, city, hasWebsite, isFormValid])
 
   const copyToClipboard = useCallback(async () => {
     try {
@@ -88,7 +90,10 @@ export default function PitchAgentPage() {
   }, [pitch])
 
   const resetForm = useCallback(() => {
-    setUrl('')
+    setBusinessName('')
+    setCategory('')
+    setCity('')
+    setHasWebsite(false)
     setPitch('')
     setError('')
     setCopied(false)
@@ -107,64 +112,123 @@ export default function PitchAgentPage() {
             PitchAgent
           </h1>
           <p className="mx-auto max-w-xl text-lg text-muted-foreground">
-            Cole o link do Google Maps ou Instagram de um negócio local e receba um pitch de vendas personalizado para WhatsApp
+            Preencha as informações do negócio local e receba um pitch de vendas
+            personalizado para WhatsApp
           </p>
         </header>
 
         {/* Main Card */}
         <Card className="border-border/50 bg-card/50 p-6 backdrop-blur-sm sm:p-8">
-          {/* Step 1: Input */}
+          {/* Step 1: Input Form */}
           <div className="mb-6">
-            <label className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+            <label className="mb-4 flex items-center gap-2 text-sm font-medium text-foreground">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                 1
               </span>
-              Cole o link do negócio
+              Informações do negócio
             </label>
-            
-            <div className="relative">
-              <LinkIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value)
-                  setError('')
-                }}
-                placeholder="https://maps.google.com/... ou https://instagram.com/..."
-                className="h-14 w-full rounded-lg border border-border bg-input pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                disabled={isLoading}
-              />
+
+            <div className="space-y-4">
+              {/* Business Name */}
+              <div className="relative">
+                <BuildingIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => {
+                    setBusinessName(e.target.value)
+                    setError('')
+                  }}
+                  placeholder="Nome do negócio"
+                  className="h-12 pl-12"
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Category */}
+              <div className="relative">
+                <TagIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value)
+                    setError('')
+                  }}
+                  placeholder="Categoria (ex: Restaurante, Barbearia, Academia)"
+                  className="h-12 pl-12"
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* City */}
+              <div className="relative">
+                <MapPinIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={city}
+                  onChange={(e) => {
+                    setCity(e.target.value)
+                    setError('')
+                  }}
+                  placeholder="Cidade"
+                  className="h-12 pl-12"
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Has Website Toggle */}
+              <div
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-input p-4 transition-colors hover:bg-secondary"
+                onClick={() => !isLoading && setHasWebsite(!hasWebsite)}
+              >
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                    hasWebsite
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-muted-foreground'
+                  }`}
+                >
+                  <GlobeIcon className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">
+                    O negócio já tem website?
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {hasWebsite
+                      ? 'Sim, já possui um site'
+                      : 'Não, ainda não tem site'}
+                  </p>
+                </div>
+                <div
+                  className={`h-6 w-11 rounded-full p-0.5 transition-colors ${
+                    hasWebsite ? 'bg-primary' : 'bg-border'
+                  }`}
+                >
+                  <div
+                    className={`h-5 w-5 rounded-full bg-white transition-transform ${
+                      hasWebsite ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Platform hints */}
-            <div className="mt-3 flex flex-wrap gap-2">
-              <div className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
-                <MapPinIcon className="h-3.5 w-3.5" />
-                Google Maps
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
-                <InstagramIcon className="h-3.5 w-3.5" />
-                Instagram
-              </div>
-            </div>
-
-            {error && (
-              <p className="mt-3 text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
           </div>
 
           {/* Generate Button */}
           <Button
             onClick={generatePitch}
-            disabled={isLoading || !url.trim()}
+            disabled={isLoading || !isFormValid}
             className="h-12 w-full gap-2 text-base font-semibold"
             size="lg"
           >
             {isLoading ? (
               <>
                 <Spinner className="h-5 w-5" />
-                Analisando e gerando pitch...
+                Gerando pitch personalizado...
               </>
             ) : (
               <>
@@ -184,7 +248,7 @@ export default function PitchAgentPage() {
                   </span>
                   Pitch pronto para WhatsApp
                 </label>
-                
+
                 {pitch && !isLoading && (
                   <div className="flex gap-2">
                     <Button
@@ -221,8 +285,12 @@ export default function PitchAgentPage() {
               <Textarea
                 value={pitch}
                 readOnly
-                placeholder={isLoading ? 'Analisando o negócio e gerando um pitch personalizado...' : ''}
-                className="min-h-[280px] resize-none border-border bg-secondary/50 text-foreground leading-relaxed"
+                placeholder={
+                  isLoading
+                    ? 'Gerando um pitch personalizado para este negócio...'
+                    : ''
+                }
+                className="min-h-[280px] resize-none border-border bg-secondary/50 leading-relaxed text-foreground"
               />
 
               {pitch && !isLoading && (
@@ -237,7 +305,8 @@ export default function PitchAgentPage() {
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            Dica: Busque o negócio no Google Maps ou encontre o perfil no Instagram antes de colar o link aqui
+            Dica: Preencha os dados encontrados no Google Maps ou Instagram do
+            negócio
           </p>
         </footer>
       </div>
