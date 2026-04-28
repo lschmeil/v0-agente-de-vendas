@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 
 type Tone = 'informal' | 'professional' | 'aggressive'
+type Language = 'pt-br' | 'en' | 'es' | 'es-ar'
 type OpportunityLevel = 'high' | 'medium' | 'low'
 
 interface OpportunityScore {
