@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 
 type Tone = 'informal' | 'professional' | 'aggressive'
-type Language = 'pt-br' | 'en' | 'es' | 'es-ar'
+type Language = 'pt-br' | 'en' | 'es'
 type OpportunityLevel = 'high' | 'medium' | 'low'
 
 interface OpportunityScore {
@@ -36,6 +36,7 @@ export default function PitchAgentPage() {
   const [city, setCity] = useState('')
   const [hasWebsite, setHasWebsite] = useState(false)
   const [tone, setTone] = useState<Tone>('informal')
+  const [language, setLanguage] = useState<Language>('pt-br')
   const [pitch, setPitch] = useState('')
   const [opportunityScore, setOpportunityScore] = useState<OpportunityScore | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -47,7 +48,7 @@ export default function PitchAgentPage() {
 
   const generatePitch = useCallback(async (useVariation = false) => {
     if (!isFormValid) {
-      setError('Por favor, preencha todos os campos obrigatórios')
+      setError('Please fill in all required fields')
       return
     }
 
@@ -71,19 +72,20 @@ export default function PitchAgentPage() {
           city: city.trim(),
           hasWebsite,
           tone,
+          language,
           variation: newVariation,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Erro ao gerar pitch')
+        throw new Error('Error generating pitch')
       }
 
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
 
       if (!reader) {
-        throw new Error('Erro ao processar resposta')
+        throw new Error('Error processing response')
       }
 
       let fullPitch = ''
@@ -114,12 +116,12 @@ export default function PitchAgentPage() {
         }
       }
     } catch (err) {
-      setError('Ocorreu um erro ao gerar o pitch. Tente novamente.')
+      setError('An error occurred while generating the pitch. Please try again.')
       console.error('Error generating pitch:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [businessName, category, city, hasWebsite, tone, isFormValid, variation])
+  }, [businessName, category, city, hasWebsite, tone, language, isFormValid, variation])
 
   const copyToClipboard = useCallback(async () => {
     try {
@@ -137,6 +139,7 @@ export default function PitchAgentPage() {
     setCity('')
     setHasWebsite(false)
     setTone('informal')
+    setLanguage('pt-br')
     setPitch('')
     setOpportunityScore(null)
     setError('')
@@ -158,11 +161,11 @@ export default function PitchAgentPage() {
   const getOpportunityEmoji = (level: OpportunityLevel) => {
     switch (level) {
       case 'high':
-        return '🔥'
+        return ''
       case 'medium':
-        return '⚡'
+        return ''
       case 'low':
-        return '💡'
+        return ''
     }
   }
 
@@ -177,10 +180,27 @@ export default function PitchAgentPage() {
     }
   }
 
+  const getOpportunityDescription = (level: OpportunityLevel) => {
+    switch (level) {
+      case 'high':
+        return 'Business with high conversion potential'
+      case 'medium':
+        return 'Good sales opportunity'
+      case 'low':
+        return 'May need more convincing'
+    }
+  }
+
   const toneOptions: { value: Tone; label: string; emoji: string; description: string }[] = [
-    { value: 'informal', label: 'Informal', emoji: '😊', description: 'Amigável e descontraído' },
-    { value: 'professional', label: 'Profissional', emoji: '👔', description: 'Formal e corporativo' },
-    { value: 'aggressive', label: 'Agressivo', emoji: '🎯', description: 'Direto e urgente' },
+    { value: 'informal', label: 'Informal', emoji: '', description: 'Friendly and relaxed' },
+    { value: 'professional', label: 'Professional', emoji: '', description: 'Formal and corporate' },
+    { value: 'aggressive', label: 'Aggressive', emoji: '', description: 'Direct and urgent' },
+  ]
+
+  const languageOptions: { value: Language; flag: string; label: string }[] = [
+    { value: 'pt-br', flag: '', label: 'Portuguese' },
+    { value: 'en', flag: '', label: 'English' },
+    { value: 'es', flag: '', label: 'Spanish' },
   ]
 
   const charCount = pitch.length
@@ -193,14 +213,14 @@ export default function PitchAgentPage() {
         <header className="mb-12 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary">
             <SparklesIcon className="h-4 w-4" />
-            <span>Gerador de Pitch para Vendas</span>
+            <span>Sales Pitch Generator</span>
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             PitchAgent
           </h1>
           <p className="mx-auto max-w-xl text-lg text-muted-foreground">
-            Preencha as informações do negócio local e receba um pitch de vendas
-            personalizado para WhatsApp
+            Enter local business information and get a personalized sales pitch
+            ready to send via WhatsApp
           </p>
         </header>
 
@@ -212,7 +232,7 @@ export default function PitchAgentPage() {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                 1
               </span>
-              Informações do negócio
+              Business Information
             </label>
 
             <div className="space-y-4">
@@ -226,7 +246,7 @@ export default function PitchAgentPage() {
                     setBusinessName(e.target.value)
                     setError('')
                   }}
-                  placeholder="Nome do negócio (ex: Barbearia do João)"
+                  placeholder="Business name (e.g., Joe's Barbershop)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
@@ -242,7 +262,7 @@ export default function PitchAgentPage() {
                     setCategory(e.target.value)
                     setError('')
                   }}
-                  placeholder="Categoria (ex: Barbearia, Restaurante, Academia)"
+                  placeholder="Category (e.g., Barbershop, Restaurant, Gym)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
@@ -258,7 +278,7 @@ export default function PitchAgentPage() {
                     setCity(e.target.value)
                     setError('')
                   }}
-                  placeholder="Cidade (ex: São Paulo)"
+                  placeholder="City (e.g., New York)"
                   className="h-12 pl-12"
                   disabled={isLoading}
                 />
@@ -282,12 +302,12 @@ export default function PitchAgentPage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-foreground">
-                    O negócio já tem website?
+                    Does the business have a website?
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {hasWebsite
-                      ? 'Sim, já possui um site'
-                      : 'Não, ainda não tem site'}
+                      ? 'Yes, they already have a website'
+                      : 'No, they don\'t have a website yet'}
                   </p>
                 </div>
                 <div
@@ -303,9 +323,32 @@ export default function PitchAgentPage() {
                 </div>
               </button>
 
+              {/* Pitch Language Selector */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Pitch Language</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {languageOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setLanguage(option.value)}
+                      disabled={isLoading}
+                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                        language === option.value
+                          ? 'border-primary bg-primary/10 text-foreground'
+                          : 'border-border bg-input text-muted-foreground hover:bg-secondary hover:text-foreground'
+                      }`}
+                    >
+                      <span className="text-2xl">{option.flag}</span>
+                      <span className="text-sm font-medium">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Tone Selector */}
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Tom do pitch</p>
+                <p className="text-sm font-medium text-foreground">Pitch Tone</p>
                 <div className="grid grid-cols-3 gap-3">
                   {toneOptions.map((option) => (
                     <button
@@ -342,12 +385,12 @@ export default function PitchAgentPage() {
             {isLoading ? (
               <>
                 <Spinner className="h-5 w-5" />
-                Gerando pitch personalizado...
+                Generating personalized pitch...
               </>
             ) : (
               <>
                 <SparklesIcon className="h-5 w-5" />
-                Gerar Pitch de Vendas
+                Generate Sales Pitch
               </>
             )}
           </Button>
@@ -360,7 +403,7 @@ export default function PitchAgentPage() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     2
                   </span>
-                  Pitch pronto para WhatsApp
+                  Pitch ready for WhatsApp
                 </label>
 
                 {pitch && !isLoading && (
@@ -373,7 +416,7 @@ export default function PitchAgentPage() {
                       className="gap-1.5 text-muted-foreground hover:text-foreground"
                     >
                       <RefreshCwIcon className="h-4 w-4" />
-                      Novo
+                      New
                     </Button>
                     <Button
                       type="button"
@@ -385,12 +428,12 @@ export default function PitchAgentPage() {
                       {copied ? (
                         <>
                           <CheckIcon className="h-4 w-4 text-primary" />
-                          Copiado!
+                          Copied!
                         </>
                       ) : (
                         <>
                           <CopyIcon className="h-4 w-4" />
-                          Copiar
+                          Copy
                         </>
                       )}
                     </Button>
@@ -406,9 +449,7 @@ export default function PitchAgentPage() {
                     {opportunityScore.label} {getOpportunityEmoji(opportunityScore.level)}
                   </span>
                   <span className="ml-auto text-sm opacity-80">
-                    {opportunityScore.level === 'high' && 'Negócio com alto potencial de conversão'}
-                    {opportunityScore.level === 'medium' && 'Boa oportunidade de venda'}
-                    {opportunityScore.level === 'low' && 'Pode precisar de mais convencimento'}
+                    {getOpportunityDescription(opportunityScore.level)}
                   </span>
                 </div>
               )}
@@ -418,7 +459,7 @@ export default function PitchAgentPage() {
                 readOnly
                 placeholder={
                   isLoading
-                    ? 'Gerando um pitch personalizado para este negócio...'
+                    ? 'Generating a personalized pitch for this business...'
                     : ''
                 }
                 className="min-h-[280px] resize-none border-border bg-secondary/50 leading-relaxed text-foreground"
@@ -429,12 +470,12 @@ export default function PitchAgentPage() {
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <span className={`font-medium ${isIdealForWhatsApp ? 'text-primary' : 'text-yellow-400'}`}>
-                      {charCount} caracteres
+                      {charCount} characters
                     </span>
                     {isIdealForWhatsApp ? (
-                      <span className="text-muted-foreground">- Tamanho ideal para WhatsApp</span>
+                      <span className="text-muted-foreground">- Ideal size for WhatsApp</span>
                     ) : (
-                      <span className="text-yellow-400">- Considere reduzir para WhatsApp</span>
+                      <span className="text-yellow-400">- Consider shortening for WhatsApp</span>
                     )}
                   </div>
                 </div>
@@ -450,17 +491,17 @@ export default function PitchAgentPage() {
                     className="flex-1 gap-2"
                   >
                     <ShuffleIcon className="h-4 w-4" />
-                    Gerar nova variação
+                    Generate new variation
                   </Button>
                   <p className="text-center text-xs text-muted-foreground sm:hidden">
-                    Gera uma versão diferente mantendo os mesmos dados
+                    Generates a different version keeping the same data
                   </p>
                 </div>
               )}
 
               {pitch && !isLoading && (
                 <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Clique em &quot;Copiar&quot; e cole diretamente no WhatsApp
+                  Click &quot;Copy&quot; and paste directly into WhatsApp
                 </p>
               )}
             </div>
@@ -470,7 +511,7 @@ export default function PitchAgentPage() {
         {/* Footer */}
         <footer className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            Dica: Use informações do Google Maps ou Instagram do negócio para preencher os campos
+            Tip: Use information from Google Maps or Instagram of the business to fill in the fields
           </p>
         </footer>
       </div>
