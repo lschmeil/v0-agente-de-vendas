@@ -44,22 +44,38 @@ type Language = 'pt-br' | 'en' | 'es'
 function calculateOpportunityScore(category: string, hasWebsite: boolean, language: Language): { level: OpportunityLevel; label: string } {
   const categoryLower = category.toLowerCase()
   
-  // High-demand categories in all languages
+  // High-demand categories - businesses that benefit most from having a website
   const highDemandCategories = [
     'restaurante', 'restaurant', 'barbearia', 'barbershop', 'barber', 'peluquería',
     'salão', 'salon', 'salón', 'academia', 'gym', 'gimnasio', 'clínica', 'clinic',
     'consultório', 'consultorio', 'pet', 'dentista', 'dentist', 'médico', 'doctor',
-    'pizzaria', 'pizzeria', 'pizza', 'hamburgueria', 'burger', 'hamburguesería', 'delivery'
+    'pizzaria', 'pizzeria', 'pizza', 'hamburgueria', 'burger', 'hamburguesería', 'delivery',
+    'café', 'coffee', 'cafetería', 'padaria', 'bakery', 'panadería', 'bar', 'pub',
+    'spa', 'estética', 'esthetics', 'estética', 'manicure', 'nail', 'uñas',
+    'tatuagem', 'tattoo', 'tatuaje', 'fisioterapia', 'physiotherapy', 'fisioterapia',
+    'veterinário', 'veterinary', 'veterinario', 'hotel', 'pousada', 'hostel'
   ]
+  
+  // Medium-demand categories - still good opportunities
   const mediumDemandCategories = [
     'loja', 'store', 'tienda', 'shop', 'oficina', 'workshop', 'taller',
-    'escritório', 'office', 'advocacia', 'law', 'abogado',
+    'escritório', 'office', 'advocacia', 'law', 'abogado', 'advogado', 'lawyer',
     'contabilidade', 'accounting', 'contabilidad', 'imobiliária', 'real estate', 'inmobiliaria',
-    'escola', 'school', 'escuela', 'curso', 'course'
+    'escola', 'school', 'escuela', 'curso', 'course', 'auto', 'car', 'carro',
+    'mecânica', 'mechanic', 'mecánico', 'elétrica', 'electric', 'eléctrica',
+    'construção', 'construction', 'construcción', 'arquitetura', 'architecture', 'arquitectura',
+    'fotografia', 'photography', 'fotografía', 'design', 'marketing', 'agência', 'agency', 'agencia'
+  ]
+  
+  // Low-demand categories - typically already have digital presence or less web-dependent
+  const lowDemandCategories = [
+    'indústria', 'industry', 'industria', 'fábrica', 'factory', 'fábrica',
+    'atacado', 'wholesale', 'mayorista', 'distribuidora', 'distributor', 'distribuidora'
   ]
   
   const isHighDemand = highDemandCategories.some(cat => categoryLower.includes(cat))
   const isMediumDemand = mediumDemandCategories.some(cat => categoryLower.includes(cat))
+  const isLowDemand = lowDemandCategories.some(cat => categoryLower.includes(cat))
   
   const labels = {
     'pt-br': { high: 'Alta Oportunidade', medium: 'Média Oportunidade', low: 'Baixa Oportunidade' },
@@ -69,17 +85,28 @@ function calculateOpportunityScore(category: string, hasWebsite: boolean, langua
   
   const langLabels = labels[language] || labels['en']
   
-  if (!hasWebsite && isHighDemand) {
+  // Primary rule: No website = High opportunity (most important factor)
+  if (!hasWebsite) {
     return { level: 'high', label: langLabels.high }
-  } else if (!hasWebsite && isMediumDemand) {
+  }
+  
+  // Has website but in high-demand category = Medium opportunity (can sell redesign/improvement)
+  if (hasWebsite && isHighDemand) {
     return { level: 'medium', label: langLabels.medium }
-  } else if (!hasWebsite) {
+  }
+  
+  // Has website but in medium-demand category = Medium opportunity
+  if (hasWebsite && isMediumDemand) {
     return { level: 'medium', label: langLabels.medium }
-  } else if (hasWebsite && isHighDemand) {
-    return { level: 'medium', label: langLabels.medium }
-  } else {
+  }
+  
+  // Has website and in low-demand category = Low opportunity
+  if (hasWebsite && isLowDemand) {
     return { level: 'low', label: langLabels.low }
   }
+  
+  // Default: Has website but unknown category = Medium opportunity (benefit of doubt)
+  return { level: 'medium', label: langLabels.medium }
 }
 
 function generatePitch(
