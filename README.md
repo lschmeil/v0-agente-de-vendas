@@ -1,35 +1,59 @@
-# v0-agente-de-vendas
+# PitchAgent 🚀
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+An AI agent that analyzes a Google Maps or Instagram link from any local business and instantly generates a personalized sales pitch ready to send on WhatsApp.
 
-## Built with v0
+## ✨ Features
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- 🔗 Analyzes business via Google Maps or Instagram link
+- 🤖 AI-powered pitch generation using Groq (llama-3.3-70b)
+- 🌎 Multilingual support: Portuguese, English and Spanish
+- 🎯 Tone selector: Informal, Professional or Aggressive
+- 📊 Opportunity score based on business profile
+- 📱 One-click WhatsApp button
+- 📏 Character counter optimized for WhatsApp
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_egFLzObaUsFyPdFzPs0AC51ao0ql)
+## 🛠️ Built With
 
-## Getting Started
+- [v0](https://v0.dev) — UI generation
+- [Vercel](https://vercel.com) — Deployment
+- [Groq](https://groq.com) — AI inference (llama-3.3-70b-versatile)
+- [Firecrawl](https://firecrawl.dev) — URL scraping
 
-First, run the development server:
+## 🚀 Getting Started
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+### Prerequisites
+
+- Node.js 18+
+- Groq API Key
+- Firecrawl API Key
+
+### Environment Variables
+
+```env
+GROQ_API_KEY=your_groq_api_key
+FIRECRAWL_API_KEY=your_firecrawl_api_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+git clone https://github.com/lschmeil/pitchagent
+cd pitchagent
+npm install
+npm run dev
+```
 
-## Learn More
+## 📖 How It Works
 
-To learn more, take a look at the following resources:
+1. Paste a Google Maps or Instagram link of any local business
+2. Select your preferred language and tone
+3. Click **Generate Sales Pitch**
+4. Get a personalized pitch ready to send on WhatsApp
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## 🏆 Built at
 
-<a href="https://v0.app/chat/api/kiro/clone/lschmeil/v0-agente-de-vendas" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+Zero to Agent Florianópolis — April 2026
+
+## 📄 License
+
+MIT
